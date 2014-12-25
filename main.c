@@ -1,4 +1,4 @@
-#include "SDL/SDL.h"
+#include "SDL2/SDL.h"
 
 // for exit(1)
 #include <stdio.h>
@@ -18,9 +18,11 @@ static void quit();
 static void change_color();
 
 static int gameover = 0;
-static SDL_Surface *screen;
+static SDL_Window *screen;
+static SDL_Renderer *renderer;
 
 static void main_loop() {
+  SDL_RenderClear(renderer);
   SDL_Event event;
   if(SDL_PollEvent(&event)) {
     switch (event.type) {
@@ -48,8 +50,7 @@ static void change_color() {
   int color_g = rand() % 255;
   int color_b = rand() % 255;
   printf("Change color (%d, %d, %d)\n", color_r, color_g, color_b);
-  SDL_FillRect(screen, &screen->clip_rect, SDL_MapRGB(screen->format, color_r, color_g, color_b));
-  SDL_Flip(screen);
+  SDL_SetRenderDrawColor(renderer, color_r, color_g, color_b, 255);
 }
 
 static void quit() {
@@ -62,7 +63,7 @@ static void quit() {
 }
 
 static void refresh() {
-  SDL_UpdateRect(screen, 0, 0, 0, 0);
+  SDL_RenderPresent(renderer);
 }
 
 int main(int argc, char** argv) {
@@ -70,10 +71,10 @@ int main(int argc, char** argv) {
     printf("Could not initialize SDL: %s\n", SDL_GetError());
     exit(1);
   }
-  screen = SDL_SetVideoMode(640, 480, 0, 0);
-  SDL_FillRect(screen, &screen->clip_rect, SDL_MapRGB(screen->format, 255, 0, 0));
-  SDL_Flip(screen);
-  SDL_WM_SetCaption("Da test", NULL);
+  SDL_CreateWindowAndRenderer(640, 480, 0, &screen, &renderer);
+  SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+  SDL_RenderClear(renderer);
+  SDL_RenderPresent(renderer);
 
 #ifdef __EMSCRIPTEN__
   //framerate 0, infiniteloop = true
