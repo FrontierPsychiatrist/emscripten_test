@@ -24,7 +24,7 @@ static SDL_Renderer *renderer;
 static void main_loop() {
   SDL_RenderClear(renderer);
   SDL_Event event;
-  if(SDL_PollEvent(&event)) {
+  while(SDL_PollEvent(&event) > 0) {
     switch (event.type) {
     case SDL_QUIT:
       quit();
@@ -85,6 +85,8 @@ int main(int argc, char** argv) {
     SDL_Delay(60);
   }
 #endif
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(screen);
   SDL_Quit();
   return 0;
 }
