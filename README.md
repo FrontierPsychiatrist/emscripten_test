@@ -29,7 +29,7 @@ To generate a usable HTML page (this seems to be hacky...)
 
     cd build_js
     make
-    emcc CMakfeFiles/sdl_test/main.c.o -s USE_SDL=2 -s USE_SDL_IMAGE=2 -o main.html --preload-file=../data
+    emcc CMakfeFiles/sdl_test/main.c.o -s USE_SDL=2 -s USE_SDL_IMAGE=2 -o main.html --preload-file ../data
     open main.html
 
 (open is a OSX command, just open the main.html file)

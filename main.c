@@ -24,6 +24,9 @@ static SDL_Renderer *renderer;
 
 static SDL_Texture *spriteTexture;
 
+static int time = 0;
+static int timeFactor = 4;
+
 static void main_loop() {
   SDL_RenderClear(renderer);
   SDL_Event event;
@@ -45,9 +48,12 @@ static void main_loop() {
       break;
     }
   }
-  struct SDL_Rect const srcrect = { .x = 6, .y = 39, .h = 26, .w = 11 };
-  struct SDL_Rect const dstrect = { .x = 320, .y = 240, .h = 26 * 3, .w = 11 * 3 };
+  int whichSprite = (time / timeFactor) % 3;
+  struct SDL_Rect const srcrect = { .x = 24 * whichSprite, .y = 32, .h = 32, .w = 24 };
+  struct SDL_Rect const dstrect = { .x = 320, .y = 240, .h = 64, .w = 48 };
   SDL_RenderCopy(renderer, spriteTexture, &srcrect, &dstrect);
+  time++;
+  if(time >= 3 * timeFactor ) time = 0;
   refresh();
 }
 
