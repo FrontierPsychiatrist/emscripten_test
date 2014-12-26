@@ -1,4 +1,5 @@
 #include "SDL2/SDL.h"
+#include "SDL2/SDL_image.h"
 
 // for exit(1)
 #include <stdio.h>
@@ -21,6 +22,8 @@ static int gameover = 0;
 static SDL_Window *screen;
 static SDL_Renderer *renderer;
 
+static SDL_Texture *spriteTexture;
+
 static void main_loop() {
   SDL_RenderClear(renderer);
   SDL_Event event;
@@ -42,6 +45,9 @@ static void main_loop() {
       break;
     }
   }
+  struct SDL_Rect const srcrect = { .x = 6, .y = 39, .h = 26, .w = 11 };
+  struct SDL_Rect const dstrect = { .x = 320, .y = 240, .h = 26 * 3, .w = 11 * 3 };
+  SDL_RenderCopy(renderer, spriteTexture, &srcrect, &dstrect);
   refresh();
 }
 
@@ -75,6 +81,11 @@ int main(int argc, char** argv) {
   SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
   SDL_RenderClear(renderer);
   SDL_RenderPresent(renderer);
+
+  spriteTexture = IMG_LoadTexture(renderer, "../data/sprite_f.png");
+  if (spriteTexture == 0) {
+    printf("Could not load sprite texture: %s\n", SDL_GetError());
+  }
 
 #ifdef __EMSCRIPTEN__
   //framerate 0, infiniteloop = true
