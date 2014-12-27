@@ -20,17 +20,26 @@ void render_init() {
     init_textures();
 }
 
-static int time = 0;
-static int timeFactor = 4;
+static Uint64 time = 0;
+static Uint64 spriteSelection[3] = { 160000, 320000, 480000 };
 
-void render() {
+void render(Uint64 nanoSeconds) {
     SDL_RenderClear(renderer);
-    int whichSprite = (time / timeFactor) % 3;
+
+    int whichSprite = 0;
+    if(time > spriteSelection[0]) {
+        whichSprite = 1;
+    }
+    if (time > spriteSelection[1]) {
+        whichSprite = 2;
+    }
+
     struct SDL_Rect const srcrect = {.x = 24 * whichSprite, .y = 32, .h = 32, .w = 24};
     struct SDL_Rect const dstrect = {.x = 320, .y = 240, .h = 64, .w = 48};
     SDL_RenderCopy(renderer, spriteTexture, &srcrect, &dstrect);
-    time++;
-    if (time >= 3 * timeFactor) time = 0;
+
+    time += nanoSeconds;
+    if (time >= spriteSelection[2]) time = 0;
     SDL_RenderPresent(renderer);
 }
 

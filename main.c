@@ -1,6 +1,7 @@
 #include "SDL2/SDL.h"
 // for printf
 #include <stdio.h>
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
@@ -12,7 +13,13 @@ static void quit();
 
 static int gameover = 0;
 
+static Uint64 nanosecondsFactor;
+static Uint64 lastTimestamp;
+
 static void main_loop() {
+    Uint64 now = SDL_GetPerformanceCounter();
+    Uint64 nanoSeconds = (now - lastTimestamp) / nanosecondsFactor;
+
     SDL_Event event;
     while (SDL_PollEvent(&event) > 0) {
         switch (event.type) {
@@ -33,7 +40,9 @@ static void main_loop() {
                 break;
         }
     }
-    render();
+    render(nanoSeconds);
+
+    lastTimestamp = now;
 }
 
 static void quit() {
@@ -48,13 +57,15 @@ static void quit() {
 int main(int argc, char **argv) {
     render_init();
 
+    nanosecondsFactor = SDL_GetPerformanceFrequency() / 1000000;
+    lastTimestamp = SDL_GetPerformanceCounter();
 #ifdef __EMSCRIPTEN__
     //framerate 0, infiniteloop = true
     emscripten_set_main_loop(main_loop, 0, 1);
 #else
     while (!gameover) {
         main_loop();
-        SDL_Delay(60);
+        SDL_Delay(160);
     }
 #endif
 
