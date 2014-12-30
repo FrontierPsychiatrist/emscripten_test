@@ -2,12 +2,14 @@
 #include "SDL2/SDL_image.h"
 
 #include "render.h"
+#include "state.h"
 
-static void init_textures();
+extern struct State *state;
+
+static void init_state();
 
 static SDL_Window *screen;
 static SDL_Renderer *renderer;
-static SDL_Texture *spriteTexture;
 
 void render_init() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -17,37 +19,60 @@ void render_init() {
     SDL_CreateWindowAndRenderer(640, 480, 0, &screen, &renderer);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
-    init_textures();
+    init_state();
 }
 
-static Uint64 time = 0;
-static Uint64 spriteSelection[3] = { 160000, 320000, 480000 };
-
-void render(Uint64 nanoSeconds) {
+void render(Sint64 nanoSeconds) {
     SDL_RenderClear(renderer);
 
-    int whichSprite = 0;
-    if(time > spriteSelection[0]) {
-        whichSprite = 1;
-    }
-    if (time > spriteSelection[1]) {
-        whichSprite = 2;
+    for (int i = 0; i < state->numSprites; ++i) {
+        struct Sprite *sprite = &state->sprites[i];
+        struct SpriteImage *image = sprite->currentAnimation->sequence[sprite->currentAnimationStep];
+        struct SDL_Rect const dstrect = { .x = sprite->posX, .y = sprite->posY, .h = image->rect.h * 3, .w = image->rect.w * 3 };
+        SDL_RenderCopy(renderer, image->texture, &image->rect, &dstrect);
     }
 
-    struct SDL_Rect const srcrect = {.x = 24 * whichSprite, .y = 32, .h = 32, .w = 24};
-    struct SDL_Rect const dstrect = {.x = 320, .y = 240, .h = 64, .w = 48};
-    SDL_RenderCopy(renderer, spriteTexture, &srcrect, &dstrect);
-
-    time += nanoSeconds;
-    if (time >= spriteSelection[2]) time = 0;
     SDL_RenderPresent(renderer);
 }
 
-static void init_textures() {
+static SDL_Texture *spriteTexture;
+static struct SpriteImage *loadedImages;
+static struct Animation animation;
+
+static void init_state() {
     spriteTexture = IMG_LoadTexture(renderer, "../data/sprite_f.png");
     if (spriteTexture == 0) {
         printf("Could not load sprite texture: %s\n", SDL_GetError());
     }
+    loadedImages = malloc(3 * sizeof(struct SpriteImage));
+    struct SpriteImage image1 = { .texture = spriteTexture, .rect = { .x = 0, .y = 32, .h = 32, .w = 24}};
+    loadedImages[0] = image1;
+    struct SpriteImage image2 = { .texture = spriteTexture, .rect = { .x = 24, .y = 32, .h = 32, .w = 24}};
+    loadedImages[1] = image2;
+    struct SpriteImage image3 = { .texture = spriteTexture, .rect = { .x = 48, .y = 32, .h = 32, .w = 24}};
+    loadedImages[2] = image3;
+
+    animation.sequence = malloc(4 * sizeof(struct SpriteImage*));
+    animation.sequence[0] = loadedImages;
+    animation.sequence[1] = &loadedImages[1];
+    animation.sequence[2] = &loadedImages[2];
+    animation.sequence[3] = &loadedImages[1];
+    animation.displayTimes = malloc(4 * sizeof(int));
+    animation.displayTimes[0] = 160;
+    animation.displayTimes[1] = 160;
+    animation.displayTimes[2] = 160;
+    animation.displayTimes[3] = 160;
+    animation.length = 4;
+
+    state = malloc(sizeof(state));
+    state->sprites = malloc(sizeof(struct Sprite));
+    state->numSprites = 1;
+
+    state->sprites[0].currentAnimation = &animation;
+    state->sprites[0].currentAnimationStep = 0;
+    state->sprites[0].posX = 320;
+    state->sprites[0].posY = 240;
+    state->sprites[0].currentStepDisplayTime = 0;
 }
 
 void render_destroy() {

@@ -7,18 +7,23 @@
 #endif
 
 #include "render.h"
+#include "update.h"
+
+#define TIMESTEP_MS 20
 
 static void main_loop();
 static void quit();
 
 static int gameover = 0;
 
-static Uint64 nanosecondsFactor;
+static Uint64 miliSecondsFactor;
 static Uint64 lastTimestamp;
+
+struct State *state;
 
 static void main_loop() {
     Uint64 now = SDL_GetPerformanceCounter();
-    Uint64 nanoSeconds = (now - lastTimestamp) / nanosecondsFactor;
+    Sint64 lastFrameTime = (now - lastTimestamp) / miliSecondsFactor;
 
     SDL_Event event;
     while (SDL_PollEvent(&event) > 0) {
@@ -40,7 +45,13 @@ static void main_loop() {
                 break;
         }
     }
-    render(nanoSeconds);
+
+    while (lastFrameTime > 0) {
+        updateState(TIMESTEP_MS);
+        lastFrameTime -= TIMESTEP_MS;
+    }
+
+    render(lastFrameTime);
 
     lastTimestamp = now;
 }
@@ -57,7 +68,7 @@ static void quit() {
 int main(int argc, char **argv) {
     render_init();
 
-    nanosecondsFactor = SDL_GetPerformanceFrequency() / 1000000;
+    miliSecondsFactor = SDL_GetPerformanceFrequency() / 1000;
     lastTimestamp = SDL_GetPerformanceCounter();
 #ifdef __EMSCRIPTEN__
     //framerate 0, infiniteloop = true
@@ -65,6 +76,7 @@ int main(int argc, char **argv) {
 #else
     while (!gameover) {
         main_loop();
+        // TODO we should't need this but our loop is still much too fast (6ms...)
         SDL_Delay(160);
     }
 #endif

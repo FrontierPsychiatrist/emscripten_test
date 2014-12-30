@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(emscripten_test)
 
-add_executable(sdl_test main.c render.c)
+add_executable(sdl_test main.c render.c update.c)
 
 include(FindPkgConfig)
 pkg_search_module(SDL2 required sdl2)
