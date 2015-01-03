@@ -1,6 +1,7 @@
 #include "update.h"
 
 #include "state.h"
+#include "images.h"
 
 extern struct State *state;
 

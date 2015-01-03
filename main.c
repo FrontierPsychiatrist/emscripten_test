@@ -1,6 +1,4 @@
 #include "SDL2/SDL.h"
-// for printf
-#include <stdio.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -8,6 +6,8 @@
 
 #include "render.h"
 #include "update.h"
+#include "images.h"
+#include "state.h"
 
 #define TIMESTEP_MS 20
 
@@ -65,8 +65,22 @@ static void quit() {
     printf("Quit called\n");
 }
 
+static void state_init() {
+    state = malloc(sizeof(state));
+    state->sprites = malloc(sizeof(struct Sprite));
+    state->numSprites = 1;
+
+    state->sprites[0].currentAnimation = getAnimation(SPRITE_F_FORWARD);
+    state->sprites[0].currentAnimationStep = 0;
+    state->sprites[0].posX = 320;
+    state->sprites[0].posY = 240;
+    state->sprites[0].currentStepDisplayTime = 0;
+}
+
 int main(int argc, char **argv) {
     render_init();
+    initImageFiles();
+    state_init();
 
     miliSecondsFactor = SDL_GetPerformanceFrequency() / 1000;
     lastTimestamp = SDL_GetPerformanceCounter();
@@ -81,6 +95,7 @@ int main(int argc, char **argv) {
     }
 #endif
 
+    destroyFiles();
     render_destroy();
     SDL_Quit();
     return 0;
